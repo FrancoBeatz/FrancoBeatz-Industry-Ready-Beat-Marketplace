@@ -9,7 +9,8 @@ const BeatCard: React.FC<{
   onTogglePlay: (id: string) => void;
   onBuy: (beat: Beat) => void;
   progress: number;
-}> = ({ beat, activeBeatId, onTogglePlay, onBuy, progress }) => {
+  isPaused: boolean;
+}> = ({ beat, activeBeatId, onTogglePlay, onBuy, progress, isPaused }) => {
   const isActive = activeBeatId === beat.id;
 
   return (
@@ -25,7 +26,7 @@ const BeatCard: React.FC<{
             onClick={() => onTogglePlay(beat.id)}
             className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center text-white transform scale-90 group-hover:scale-100 transition-transform neon-glow"
           >
-            {isActive ? (
+            {isActive && !isPaused ? (
                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
@@ -84,38 +85,75 @@ interface BeatStoreProps {
 
 const BeatStore: React.FC<BeatStoreProps> = ({ isLoggedIn, onOpenAuth, onOpenPayment }) => {
   const [activeBeatId, setActiveBeatId] = useState<string | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playPromiseRef = useRef<Promise<void> | null>(null);
   const PREVIEW_LIMIT = 30; // 30 seconds limit
 
-  const handleTogglePlay = (id: string) => {
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const stopAudio = async () => {
+    if (audioRef.current) {
+      // If a play is in progress, we must wait for it to finish or catch the interruption error
+      if (playPromiseRef.current) {
+        try {
+          await playPromiseRef.current;
+        } catch (e) {
+          // Promise was rejected, likely due to an interruption
+        }
+      }
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current.src = "";
+    }
+  };
+
+  const handleTogglePlay = async (id: string) => {
     const selectedBeat = BEATS.find(b => b.id === id);
     if (!selectedBeat) return;
 
     if (activeBeatId === id) {
+      // Toggle current track
       if (audioRef.current?.paused) {
-        audioRef.current.play();
+        try {
+          playPromiseRef.current = audioRef.current.play();
+          await playPromiseRef.current;
+          setIsPaused(false);
+        } catch (e) {
+          console.debug("Playback failed or was interrupted:", e);
+        }
       } else {
         audioRef.current?.pause();
+        setIsPaused(true);
       }
     } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
+      // Switch tracks
+      await stopAudio();
+      
       setActiveBeatId(id);
+      setIsPaused(false);
       setProgress(0);
       
       const audio = new Audio(selectedBeat.audioUrl);
       audioRef.current = audio;
-      audio.play();
       
       audio.ontimeupdate = () => {
-        const current = audio.currentTime;
+        if (!audioRef.current) return;
+        const current = audioRef.current.currentTime;
         if (current >= PREVIEW_LIMIT) {
-          audio.pause();
+          audioRef.current.pause();
           setActiveBeatId(null);
+          setIsPaused(false);
           setProgress(0);
-          // Optional: Notify user that preview has ended
+          console.log("Artist Preview Limit Reached (30s)");
         } else {
           setProgress((current / PREVIEW_LIMIT) * 100);
         }
@@ -123,8 +161,16 @@ const BeatStore: React.FC<BeatStoreProps> = ({ isLoggedIn, onOpenAuth, onOpenPay
 
       audio.onended = () => {
         setActiveBeatId(null);
+        setIsPaused(false);
         setProgress(0);
       };
+
+      try {
+        playPromiseRef.current = audio.play();
+        await playPromiseRef.current;
+      } catch (e) {
+        console.debug("Playback initialization interrupted:", e);
+      }
     }
   };
 
@@ -141,13 +187,13 @@ const BeatStore: React.FC<BeatStoreProps> = ({ isLoggedIn, onOpenAuth, onOpenPay
       <div className="container mx-auto px-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 space-y-4 md:space-y-0">
           <div>
-            <h2 className="text-4xl md:text-5xl font-black mb-4 font-poppins">LATEST TRACKS</h2>
+            <h2 className="text-4xl md:text-5xl font-black mb-4 font-poppins text-white uppercase tracking-tighter italic">LATEST CATALOGUE</h2>
             <p className="text-gray-500 max-w-lg">
-              Artists can preview 30s of any track for free. Login to your account to purchase full licenses and high-quality stems.
+              Artists can preview 30s of any track for free. Login to your account to purchase full licenses and high-quality stems via secure bank transfer.
             </p>
           </div>
           <div className="flex space-x-2">
-            <button className="bg-purple-600 px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all">All Genres</button>
+            <button className="bg-purple-600 px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all italic">All Genres</button>
             <button className="bg-white/5 hover:bg-white/10 px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all">Trap</button>
             <button className="bg-white/5 hover:bg-white/10 px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all">Drill</button>
           </div>
@@ -159,6 +205,7 @@ const BeatStore: React.FC<BeatStoreProps> = ({ isLoggedIn, onOpenAuth, onOpenPay
               key={beat.id} 
               beat={beat} 
               activeBeatId={activeBeatId} 
+              isPaused={isPaused}
               onTogglePlay={handleTogglePlay}
               onBuy={handleBuyClick}
               progress={activeBeatId === beat.id ? progress : 0}
@@ -167,7 +214,7 @@ const BeatStore: React.FC<BeatStoreProps> = ({ isLoggedIn, onOpenAuth, onOpenPay
         </div>
         
         <div className="mt-20 text-center">
-          <button className="inline-flex items-center space-x-2 text-purple-400 font-bold uppercase tracking-[0.2em] text-sm hover:text-purple-300 transition-colors group">
+          <button className="inline-flex items-center space-x-2 text-purple-400 font-bold uppercase tracking-[0.2em] text-sm hover:text-purple-300 transition-colors group italic">
             <span>View All Beats</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
