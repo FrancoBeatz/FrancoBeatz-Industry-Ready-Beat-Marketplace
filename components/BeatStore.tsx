@@ -7,8 +7,9 @@ const BeatCard: React.FC<{
   beat: Beat; 
   activeBeatId: string | null; 
   onTogglePlay: (id: string) => void;
+  onBuy: (beat: Beat) => void;
   progress: number;
-}> = ({ beat, activeBeatId, onTogglePlay, progress }) => {
+}> = ({ beat, activeBeatId, onTogglePlay, onBuy, progress }) => {
   const isActive = activeBeatId === beat.id;
 
   return (
@@ -61,7 +62,10 @@ const BeatCard: React.FC<{
           ))}
         </div>
         
-        <button className="w-full bg-white/5 hover:bg-purple-600 border border-white/10 hover:border-purple-600 text-white text-xs font-bold uppercase tracking-widest py-3 rounded-xl transition-all flex items-center justify-center space-x-2">
+        <button 
+          onClick={() => onBuy(beat)}
+          className="w-full bg-white/5 hover:bg-purple-600 border border-white/10 hover:border-purple-600 text-white text-xs font-bold uppercase tracking-widest py-3 rounded-xl transition-all flex items-center justify-center space-x-2"
+        >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
@@ -72,7 +76,13 @@ const BeatCard: React.FC<{
   );
 };
 
-const BeatStore: React.FC = () => {
+interface BeatStoreProps {
+  isLoggedIn: boolean;
+  onOpenAuth: () => void;
+  onOpenPayment: (beat: Beat) => void;
+}
+
+const BeatStore: React.FC<BeatStoreProps> = ({ isLoggedIn, onOpenAuth, onOpenPayment }) => {
   const [activeBeatId, setActiveBeatId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -83,14 +93,12 @@ const BeatStore: React.FC = () => {
     if (!selectedBeat) return;
 
     if (activeBeatId === id) {
-      // Toggle pause/play
       if (audioRef.current?.paused) {
         audioRef.current.play();
       } else {
         audioRef.current?.pause();
       }
     } else {
-      // New beat
       if (audioRef.current) {
         audioRef.current.pause();
       }
@@ -107,7 +115,6 @@ const BeatStore: React.FC = () => {
           audio.pause();
           setActiveBeatId(null);
           setProgress(0);
-          alert("Artist Preview Ended. Purchase the full license to unlock the complete high-quality track.");
         } else {
           setProgress((current / PREVIEW_LIMIT) * 100);
         }
@@ -120,6 +127,14 @@ const BeatStore: React.FC = () => {
     }
   };
 
+  const handleBuyClick = (beat: Beat) => {
+    if (!isLoggedIn) {
+      onOpenAuth();
+    } else {
+      onOpenPayment(beat);
+    }
+  };
+
   return (
     <section id="beats" className="py-32 bg-[#050505]">
       <div className="container mx-auto px-6">
@@ -127,7 +142,7 @@ const BeatStore: React.FC = () => {
           <div>
             <h2 className="text-4xl md:text-5xl font-black mb-4 font-poppins">LATEST TRACKS</h2>
             <p className="text-gray-500 max-w-lg">
-              Explore the freshest catalog of trap, drill, and hip-hop beats. Use the filters to find the perfect vibe for your next hit.
+              Artists can preview 30s of any track. Login or register to purchase full high-quality stems and licenses.
             </p>
           </div>
           <div className="flex space-x-2">
@@ -144,6 +159,7 @@ const BeatStore: React.FC = () => {
               beat={beat} 
               activeBeatId={activeBeatId} 
               onTogglePlay={handleTogglePlay}
+              onBuy={handleBuyClick}
               progress={activeBeatId === beat.id ? progress : 0}
             />
           ))}

@@ -1,7 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 
-const Navbar: React.FC = () => {
+interface NavbarProps {
+  isLoggedIn: boolean;
+  userEmail: string | null;
+  onLogout: () => void;
+  onOpenAuth: () => void;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, userEmail, onLogout, onOpenAuth }) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -20,7 +27,7 @@ const Navbar: React.FC = () => {
           <span className="text-2xl font-black tracking-tighter text-white font-poppins">FRANCOBEATZ</span>
         </a>
         
-        <div className="hidden md:flex items-center space-x-8 text-sm font-medium uppercase tracking-widest text-gray-300">
+        <div className="hidden lg:flex items-center space-x-8 text-sm font-medium uppercase tracking-widest text-gray-300">
           <a href="#beats" className="hover:text-purple-500 transition-colors">Beats</a>
           <a href="#licensing" className="hover:text-purple-500 transition-colors">Licenses</a>
           <a href="#how-it-works" className="hover:text-purple-500 transition-colors">Process</a>
@@ -29,9 +36,24 @@ const Navbar: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-4">
-          <button className="hidden sm:block text-xs font-bold uppercase tracking-widest border border-white/20 px-6 py-2 rounded-full hover:bg-white/10 transition-all">
-            Login
-          </button>
+          {isLoggedIn ? (
+            <div className="flex items-center space-x-4">
+              <span className="hidden sm:block text-[10px] font-bold text-gray-500 uppercase tracking-widest">{userEmail}</span>
+              <button 
+                onClick={onLogout}
+                className="text-xs font-bold uppercase tracking-widest border border-white/20 px-6 py-2 rounded-full hover:bg-white/10 transition-all"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={onOpenAuth}
+              className="text-xs font-bold uppercase tracking-widest border border-white/20 px-6 py-2 rounded-full hover:bg-white/10 transition-all"
+            >
+              Login
+            </button>
+          )}
           <button className="bg-purple-600 text-white text-xs font-bold uppercase tracking-widest px-6 py-2 rounded-full hover:bg-purple-700 transition-all neon-glow">
             Cart (0)
           </button>
