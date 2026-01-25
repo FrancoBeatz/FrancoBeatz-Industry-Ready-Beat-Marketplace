@@ -1,0 +1,7 @@
+{
+  "name": "FrancoBeatz – Industry-Ready Beat Marketplace",
+  "description": "A professional, dark-themed music e-commerce platform for trap and hip-hop producers to showcase and sell licenses for their beats.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
