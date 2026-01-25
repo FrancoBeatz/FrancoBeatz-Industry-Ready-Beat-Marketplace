@@ -115,6 +115,7 @@ const BeatStore: React.FC<BeatStoreProps> = ({ isLoggedIn, onOpenAuth, onOpenPay
           audio.pause();
           setActiveBeatId(null);
           setProgress(0);
+          // Optional: Notify user that preview has ended
         } else {
           setProgress((current / PREVIEW_LIMIT) * 100);
         }
@@ -142,7 +143,7 @@ const BeatStore: React.FC<BeatStoreProps> = ({ isLoggedIn, onOpenAuth, onOpenPay
           <div>
             <h2 className="text-4xl md:text-5xl font-black mb-4 font-poppins">LATEST TRACKS</h2>
             <p className="text-gray-500 max-w-lg">
-              Artists can preview 30s of any track. Login or register to purchase full high-quality stems and licenses.
+              Artists can preview 30s of any track for free. Login to your account to purchase full licenses and high-quality stems.
             </p>
           </div>
           <div className="flex space-x-2">

@@ -44,6 +44,15 @@ const App: React.FC = () => {
     setIsPaymentModalOpen(true);
   };
 
+  const handleSelectLicenseFromGeneric = () => {
+    // If user clicks from generic licensing section without picking a beat first
+    const beatsSection = document.getElementById('beats');
+    if (beatsSection) {
+      beatsSection.scrollIntoView({ behavior: 'smooth' });
+      // We could also show a little prompt, but scrolling to beats is best UX
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar 
@@ -60,7 +69,7 @@ const App: React.FC = () => {
           onOpenPayment={handleOpenPayment}
         />
         <HowItWorks />
-        <Licensing />
+        <Licensing onSelectLicense={handleSelectLicenseFromGeneric} />
         <About />
         <Contact />
       </main>

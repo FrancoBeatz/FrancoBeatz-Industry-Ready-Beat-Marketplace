@@ -2,7 +2,11 @@
 import React from 'react';
 import { LICENSES } from '../constants';
 
-const Licensing: React.FC = () => {
+interface LicensingProps {
+  onSelectLicense: () => void;
+}
+
+const Licensing: React.FC<LicensingProps> = ({ onSelectLicense }) => {
   return (
     <section id="licensing" className="py-32 bg-[#0a0a0a] relative overflow-hidden">
       {/* Decorative gradient */}
@@ -47,7 +51,10 @@ const Licensing: React.FC = () => {
                 ))}
               </div>
               
-              <button className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-sm transition-all ${license.recommended ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg' : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'}`}>
+              <button 
+                onClick={onSelectLicense}
+                className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-sm transition-all ${license.recommended ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg' : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'}`}
+              >
                 Select License
               </button>
             </div>
