@@ -28,12 +28,13 @@ export interface Beat {
   tags: string[];
   description?: string;
   is_exclusive: boolean;
-  stock_quantity: number; // For limited licenses
+  stock_quantity: number;
   created_at: string;
 }
 
 export interface CartItem extends Beat {
   licenseType: string;
+  quantity: number;
 }
 
 export interface Order {
@@ -44,10 +45,4 @@ export interface Order {
   status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
   payment_intent_id?: string;
   created_at: string;
-}
-
-export interface PlayingState {
-  beatId: string | null;
-  isPlaying: boolean;
-  progress: number;
 }
