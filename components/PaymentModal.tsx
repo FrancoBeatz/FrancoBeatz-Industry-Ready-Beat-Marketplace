@@ -63,7 +63,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, beat }) =>
         </button>
 
         <div className="flex items-center space-x-4 mb-8">
-          <img src={beat.coverUrl} className="w-20 h-20 rounded-xl object-cover" alt={beat.title} />
+          {/* Fix: changed coverUrl to cover_url */}
+          <img src={beat.cover_url} className="w-20 h-20 rounded-xl object-cover" alt={beat.title} />
           <div>
             <h3 className="text-2xl font-black font-poppins text-white uppercase">{beat.title}</h3>
             <p className="text-purple-400 font-bold">${beat.price} - Industry Standard License</p>
